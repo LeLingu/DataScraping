@@ -5,4 +5,4 @@ Investigating the ideas that:
 
 The csvs store data for the season begining with the same name.
 
-The data is scraped using Python and cleaning with R.
+The data is scraped using Python and cleaned with R.
