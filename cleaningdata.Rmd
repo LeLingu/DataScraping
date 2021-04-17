@@ -1,0 +1,87 @@
+---
+title: "cleaningdata"
+author: "u1805379"
+date: "15/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rio)
+library(dplyr)
+library(stringr)
+library(comprehenr)
+library(ggplot2)
+library(GGally)
+```
+
+```{r gettingdata,}
+load_season <- function(datafile){
+  season <- import(datafile, setclass = "tibble")[,-1]
+  return(season)
+}
+
+a <- load_season("2018.csv")
+head(a)
+```
+
+```{r cleaningdata,}
+cleaning_tibble <- function(df){
+  names(df) <- str_remove_all(names(df), " ")
+  df <- mutate(df, BallPossession_Home_team = as.numeric(str_remove(BallPossession_Home_team, "%"))/100)
+  df <- mutate(df, BallPossession_Away_team = as.numeric(str_remove(BallPossession_Away_team, "%"))/100)
+  return(df)
+}
+
+cleaning_tibble(a)
+```
+
+
+```{r addingdataandgettingseason,}
+add_result <- function(df){
+  
+  df[df$"Goals_Home_team" > df$"Goals_Away_team", "Result_Home_team"] = "W"
+  df[df$"Goals_Home_team" < df$"Goals_Away_team", "Result_Home_team"] = "L"
+  df[df$"Goals_Home_team" == df$"Goals_Away_team", "Result_Home_team"] = "D"
+  df[df$"Goals_Home_team" > df$"Goals_Away_team", "Result_Away_team"] = "L"
+  df[df$"Goals_Home_team" < df$"Goals_Away_team", "Result_Away_team"] = "W"
+  df[df$"Goals_Home_team" == df$"Goals_Away_team", "Result_Away_team"] = "D"
+  
+  return(df)
+}
+
+get_games <- function(df){
+  
+  home.data <- df[grepl("Home_team", names(df))]
+  names(home.data) <- str_remove_all(names(home.data), "_Home_team")
+  home.data["Location"] = rep_len("Home", 380)
+  names(home.data)[1] = "Team"
+  
+  away.data <- df[grepl("Away_team", names(df))]
+  names(away.data) <- str_remove_all(names(away.data), "_Away_team")
+  away.data["Location"] = rep_len("Away", 380)
+  names(away.data)[1] = "Team"
+  
+  season <- rbind(home.data, away.data)
+  
+  return(season)
+}
+```
+
+
+```{r completedcleaning,}
+season_2018 <- load_season("2018.csv")
+season_2018 <- cleaning_tibble(season_2018)
+season_2018 <- add_result(season_2018)
+season_2018 <- get_games(season_2018)
+head(season_2018, 200)
+```
+
+```{r intialEDA}
+view <- season_2018 %>% select(Goals, TotalPasses, Result) #, GoalAttempts, CornerKicks, Result)
+
+
+ggpairs(data = view[,1:3], mapping=ggplot2::aes(col = Result) )
+
+```
+
