@@ -13,6 +13,7 @@ library(stringr)
 library(comprehenr)
 library(ggplot2)
 library(GGally)
+library(psych)
 ```
 
 ```{r gettingdata,}
@@ -78,10 +79,28 @@ head(season_2018, 200)
 ```
 
 ```{r intialEDA}
-view <- season_2018 %>% select(Goals, TotalPasses, Result) #, GoalAttempts, CornerKicks, Result)
+data <- season_2018[,2:19]
+
+corPlot(data[,1:10])
+corPlot(data[,11:17])
+theme_set(theme_bw())
+
+ggplot(data= season_2018, aes(x=GoalAttempts, col= Result)) + geom_bar()
+
+# Strong positive correlation
+ggplot(data= season_2018, aes(x=GoalAttempts, y=CornerKicks, col= Result)) + geom_jitter(width = .5, size=1)
+
+# Weak negaative correlation 
+ggplot(data= season_2018, aes(x=TotalPasses, y=Tackles)) + geom_point()
+```
+
+```{r selectingkeystats}
+key_stats_2018 <- season_2018 %>% select(Goals, GoalAttempts, BallPossession, FreeKicks, CornerKicks, TotalPasses, Tackles)
+
+ggplot(data= season_2018, aes(x=GoalAttempts, y=CornerKicks, col= Result)) + geom_jitter(width = .5, size=1) + 
+  geom_smooth(aes(col=Result), method="lm", se=F)
 
 
-ggpairs(data = view[,1:3], mapping=ggplot2::aes(col = Result) )
-
+ggplot(data= season_2018, aes(x= Result, fill= factor(Goals))) + geom_bar()
 ```
 
